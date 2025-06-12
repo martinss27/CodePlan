@@ -2,6 +2,8 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 import requests
+import re
+import json
 
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
@@ -135,6 +137,20 @@ class JiraProjectIssues(APIView):
         headers = {"Authorization": f"Bearer {jira_token.access_token}"}
         resp = requests.get(url, headers=headers)
         data = resp.json()
+
+        def extract_description(desc):
+                if isinstance(desc, dict) and "content" in desc:
+                    #extract text from Jira structured description
+                    try:
+                        return " ".join(
+                            t["text"]
+                            for p in desc["content"]
+                            for t in p.get("content", [])
+                            if t.get("type") == "text"
+                        )
+                    except Exception:
+                        return str(desc)
+                return desc if desc else ""
         
         # Filter to get only essential fields
         filtered_issues = [
@@ -142,17 +158,100 @@ class JiraProjectIssues(APIView):
                 "id": issue["id"],
                 "key": issue["key"],
                 "summary": issue["fields"].get("summary"),
-                "description": issue["fields"].get("description"),
+                "description": extract_description(issue["fields"].get("description")),
                 "status": issue["fields"].get("status", {}).get("name"),
                 "assignee": (
                     issue["fields"].get("assignee", {}).get("displayName")
                     if issue["fields"].get("assignee") else None
                 ),
-                "created": issue["fields"].get("created"),
-                "updated": issue["fields"].get("updated"),
+                #"created": issue["fields"].get("created"),
+                #"updated": issue["fields"].get("updated"),
                 "issuetype": issue["fields"].get("issuetype", {}).get("name"),
                 "priority": issue["fields"].get("priority", {}).get("name"),
             }
             for issue in data.get("issues", [])
         ]
-        return Response(filtered_issues)
+#       return Response(filtered_issues)
+    
+        # Create the prompt for the AI
+
+        prompt = (
+            "Você é um assistente técnico especializado em análise de tarefas de desenvolvimento. "
+            "Sua função é classificar cada task recebida com base em 4 critérios: urgência, complexidade, dependência e histórico.\n"
+            "Para cada task abaixo, analise e retorne um JSON com os seguintes campos:\n"
+            "- \"urgency\": classificar como \"baixa\", \"média\" ou \"alta\", com base em palavras-chave como prazos, bloqueios, entregas próximas, etc.\n"
+            "- \"complexity\": classificar como \"baixa\", \"média\" ou \"alta\", com base no escopo da tarefa, número de etapas, necessidade de pesquisa ou integração.\n"
+            "- \"dependency\": classificar como \"sem dependência\", \"com dependência leve\" ou \"dependência crítica\", avaliando se há outros times, APIs, validações ou aprovações envolvidas.\n"
+            "- \"history_note\": gerar uma breve observação de até 2 frases com base em possíveis tarefas semelhantes ou padrões, como “essa tarefa já foi feita antes em um módulo X” ou “pode ter conflitos com Y”.\n"
+            "Responda apenas com um array JSON, onde cada elemento corresponde a uma task analisada, seguindo exatamente o formato pedido.\n\n"
+            "Tasks:\n"
+        )
+
+
+        # Add each issue to the prompt
+        for issue in filtered_issues:
+            prompt += (
+                f"- Título: {issue['summary']}\n"
+                f"Descrição: {extract_description(issue['description'])}\n"
+                f"Status: {issue['status']}\n"
+                f"Tipo: {issue['issuetype']}\n"
+                f"Prioridade: {issue['priority']}\n"
+                f"Responsável: {issue['assignee']}\n\n"
+            )
+
+        # call the Deepseek API 
+
+        openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+        api_url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {openrouter_api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://localhost:8000",
+            "X-title": "Jira DeepSeek Integration",
+            }
+        payload = {
+            "model": "deepseek/deepseek-chat:free",
+            "messages": [
+                {"role": "user", "content": prompt}
+            ]
+        }
+
+        ia_response = None
+        try:
+            ia_resp = requests.post(api_url, headers=headers, json=payload, timeout=30)
+            if ia_resp.ok:
+                ia_json = ia_resp.json()
+                ia_response = ia_json["choices"][0]["message"]["content"]
+
+                # remove markdown code blocks, if they exist
+                if ia_response:
+                    ia_response = re.sub(r"^```json\s*|\s*```$", "", ia_response.strip(), flags=re.MULTILINE)
+                    
+                    # try to convert as a python object
+                    try:
+                        ia_response = json.loads(ia_response)
+                    except Exception:
+                        pass
+            else:
+                ia_response = f"Error: {ia_resp.status_code} - {ia_resp.text}"
+        except Exception as e:
+            ia_response = f"error calling IA: {str(e)}"
+
+
+        # Return the filtered issues and the AI summary
+        if isinstance(ia_response, list) and len(ia_response) == len(filtered_issues):
+            enriched_ia_summary = []
+            for issue, ai_item in zip(filtered_issues, ia_response):
+                enriched_ia_summary.append({
+                    "id": issue['id'],
+                    "summary": issue['summary'],
+                    **ai_item
+                })
+        else:
+            enriched_ia_summary = ia_response # fallback to the raw IA response if it doesn't match the expected format
+
+
+        return Response({
+            "issues": filtered_issues,
+            "ai_summary": enriched_ia_summary
+        })
