@@ -176,13 +176,15 @@ class JiraProjectIssues(APIView):
         # Create the prompt for the AI
 
         prompt = (
-            "Você é um assistente técnico especializado em análise de tarefas de desenvolvimento. "
-            "Sua função é classificar cada task recebida com base em 4 critérios: urgência, complexidade, dependência e histórico.\n"
-            "Para cada task abaixo, analise e retorne um JSON com os seguintes campos:\n"
-            "- \"urgency\": classificar como \"baixa\", \"média\" ou \"alta\", com base em palavras-chave como prazos, bloqueios, entregas próximas, etc.\n"
-            "- \"complexity\": classificar como \"baixa\", \"média\" ou \"alta\", com base no escopo da tarefa, número de etapas, necessidade de pesquisa ou integração.\n"
-            "- \"dependency\": classificar como \"sem dependência\", \"com dependência leve\" ou \"dependência crítica\", avaliando se há outros times, APIs, validações ou aprovações envolvidas.\n"
-            "- \"history_note\": gerar uma breve observação de até 2 frases com base em possíveis tarefas semelhantes ou padrões, como “essa tarefa já foi feita antes em um módulo X” ou “pode ter conflitos com Y”.\n"
+            "Você é um assistente técnico especializado em análise e organização de tarefas de desenvolvimento de software.\n"
+            "Sua função é analisar cada task recebida e classificá-la de forma que o usuário consiga priorizar e organizar seu trabalho da melhor maneira possível.\n"
+            "Para cada task, avalie e retorne um JSON com os seguintes campos:\n"
+            "- \"urgency\": classifique como \"baixa\", \"média\" ou \"alta\". Considere prazos, bloqueios, entregas próximas, impacto no projeto e urgência do negócio.\n"
+            "- \"complexity\": classifique como \"baixa\", \"média\" ou \"alta\". Considere escopo, número de etapas, necessidade de pesquisa, integrações ou riscos técnicos.\n"
+            "- \"dependency\": classifique como \"sem dependência\", \"com dependência leve\" ou \"dependência crítica\". Avalie se há dependência de outros times, APIs, validações, aprovações ou recursos externos.\n"
+            "- \"history_note\": gere uma breve observação (até 2 frases) sobre possíveis tarefas semelhantes, padrões ou riscos, como “essa tarefa já foi feita antes em um módulo X” ou “pode ter conflitos com Y”.\n"
+            "- \"tip1\": forneça uma dica rápida e prática (máx. 5 linhas) para ajudar o usuário a organizar, priorizar ou executar a task. Pode ser sugestão de biblioteca, framework, método ou abordagem.\n"
+            "- \"tip2\": forneça outra dica complementar (máx. 5 linhas), como boas práticas, atalhos, ferramentas úteis ou recomendações para evitar problemas comuns.\n"
             "Responda apenas com um array JSON, onde cada elemento corresponde a uma task analisada, seguindo exatamente o formato pedido.\n\n"
             "Tasks:\n"
         )
