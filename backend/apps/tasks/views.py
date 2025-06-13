@@ -36,7 +36,6 @@ def get_cloud_id(access_token): #Function to get the cloud_id (will be reused th
 
 
 class JiraAuthInit(APIView):
-    @method_decorator(login_required)
     def get(self, request):
         url = (
             f"{JIRA_AUTH_URL}?audience=api.atlassian.com"
@@ -78,7 +77,7 @@ class JiraAuthCallback(APIView):
                 "expires_in": token_data.get("expires_in", 0),
             }
         )
-        return Response({"message": "Token saved successfully!"})
+        return redirect("http://127.0.0.1:8000/oauth/projects/")
 
 class JiraUserInfo(APIView):
     @method_decorator(login_required)

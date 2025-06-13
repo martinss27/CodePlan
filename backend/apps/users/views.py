@@ -1,11 +1,15 @@
-from rest_framework.views import APIView
 from rest_framework import generics, status
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.http import JsonResponse
+
 from .serializers import RegisterSerializer, LoginSerializer
+
 from django.contrib.auth import get_user_model
 User = get_user_model()
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 
 
 class RegisterView(generics.CreateAPIView):
@@ -18,8 +22,29 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data['user']
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key}, status=status.HTTP_200_OK)
+            refresh = RefreshToken.for_user(user)
+            response = JsonResponse({
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                }
+            })
+            response.set_cookie( #refresh token in httponly
+                key='refresh_token',
+                value=str(refresh),
+                httponly=True,
+                secure=True,  # only in prod
+                samesite='Lax'
+            )
+            response.set_cookie( #access token in httponly
+                key='access_token',
+                value=str(refresh.access_token),
+                httponly=True,
+                secure=True,
+                samesite='Lax'
+            )
+            return response
         return Response({'detail': 'invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
     
 class LogoutView(APIView):
