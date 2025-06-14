@@ -71,7 +71,7 @@ class JiraAuthCallback(APIView):
                 "expires_in": token_data.get("expires_in", 0),
             }
         )
-        return redirect("http://127.0.0.1:8000/oauth/projects/")
+        return redirect("http://127.0.0.1:8000/oauth/projects")
 
 class JiraUserInfo(APIView):
     @method_decorator(login_required)
