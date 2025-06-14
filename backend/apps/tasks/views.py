@@ -106,12 +106,12 @@ class JiraProjectIssues(APIView):
         prompt = build_ai_prompt(filtered_issues, order_label)
         ia_response = call_ai(prompt)
 
-        enriched_ia_summary, mensagem_ordenacao = self._process_ai_response(ia_response, filtered_issues)
+        enriched_ia_summary, ordering_summary = self._process_ai_response(ia_response, filtered_issues)
 
         return Response({
             "issues": filtered_issues,
             "ai_summary": enriched_ia_summary,
-            "mensagem_ordenacao": mensagem_ordenacao
+            "ordering_summary": ordering_summary
         })
 
     def _get_token_and_cloud_id(self, user):
@@ -146,10 +146,10 @@ class JiraProjectIssues(APIView):
 
         if isinstance(ia_response, dict) and "tasks" in ia_response and "mensagem" in ia_response:
             enriched_ia_summary = ia_response["tasks"]
-            mensagem_ordenacao = ia_response["mensagem"]
+            ordering_summary = ia_response["mensagem"]
         elif isinstance(ia_response, list) and len(ia_response) == len(filtered_issues):
-            mensagem_ordenacao = None
+            ordering_summary = None
         else:
-            mensagem_ordenacao = None
+            ordering_summary = None
 
-        return enriched_ia_summary, mensagem_ordenacao
+        return enriched_ia_summary, ordering_summary

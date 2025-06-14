@@ -90,52 +90,70 @@ def filter_issues(issues): #filter and format just the necessary fields
 def build_ai_prompt(filtered_issues, order_label):
     if order_label:
         prompt = (
-            f"You are a senior SCRUM MASTER, expert in agile task prioritization.\n"
-            f"Analyze the tasks below and ORDER them by the criterion: '{order_label}'.\n"
-            f"Create a preliminary and refined message to guide the user on what they need to know to make strategic decisions in JIRA. Follow this format:\n"
-            f"1. An EXECUTIVE SUMMARY about the ordering logic and the strategic objective.\n"
-            f"2. Highlighted blocks:\n"
-            f"   - WHY THIS ORDER? (explain the rationale, give practical examples)\n"
-            f"   - PRACTICAL IMPACT (what changes for the business and the user, from the perspective of how effective and strong this impact will be)\n"
-            f"   - STRATEGIC RECOMMENDATIONS (with application examples and a brief explanation of the reasons for these recommendations)\n"
-            f"   - RISKS OF NOT FOLLOWING THIS ORDER\n"
-            f"   - NEXT STEPS CHECKLIST\n"
-            f"Use clear, objective language, agile leadership tone, highlight in bullet points.\n"
+            f"You are a highly experienced software engineering advisor with senior Scrum Master knowledge. "
+            f"Your goal is to support Scrum Masters and tech leads in making strategic and tactical decisions in JIRA.\n\n"
 
-            # each task prompt:
-            f"For each task, include:\n"
-            f"- Description (summarize to the first 50 characters of the original description and add '...' at the end, even if the description is shorter)\n"
-            f"- Useful libraries (if backend, suggest for Python, JavaScript, and Java; if frontend, suggest for JavaScript, React, and Vue)\n"
-            f"- Risk factors (bring 2 possible risk factors that may occur)\n"
-            f"- Recommended strategy (be more thorough here, you can explain logically how the strategy should be applied, so it is functional regardless of the task or programming language)\n"
-            f"- Time estimate\n"
-            f"Respond with a JSON: {{ 'mensagem': <mensagem_geral>, 'tasks': [ ...tasks_ordenadas... ] }}\n\n"
+            f"Analyze the tasks below and ORDER them according to the following criterion: '{order_label}'.\n"
+            f"Then, generate a strategic message summarizing the logic behind the ordering. Use the structure below:\n\n"
+
+            f"1. EXECUTIVE SUMMARY (briefly explain the overall logic and strategic goal of the task ordering)\n"
+            f"2. WHY THIS ORDER? (justify the prioritization with practical reasoning and examples)\n"
+            f"3. PRACTICAL IMPACT (explain the expected impact for the business and user, clearly and realistically)\n"
+            f"4. STRATEGIC RECOMMENDATIONS (give practical suggestions with short examples of how they should be applied)\n"
+            f"5. RISKS OF NOT FOLLOWING THIS ORDER (technical and business risks)\n"
+            f"6. NEXT STEPS CHECKLIST (a bullet list of 3–5 clear, actionable next steps)\n\n"
+
+            f"Use objective language, direct but insightful, avoiding buzzwords. Write in clear bullet points when appropriate.\n\n"
+
+            f"For each task, return the following:\n"
+            f"- ID (as given)\n"
+            f"- Title (as given)\n"
+            f"- Description (summarize only the first 20 characters of the original description and add '...')\n"
+            f"- Useful libraries & tools (for backend tasks, suggest Python, JavaScript, and Java tools; for frontend, suggest JavaScript, React, and Vue tools)\n"
+            f"- Risk factors (provide two real technical or project risks specific to the task)\n"
+            f"- Recommended strategy (respond with a **step-by-step implementation plan**, include best practices, name relevant tools or techniques, and **justify each step**. This is the most important section — be thorough. Think like a senior engineer mentoring someone on how to approach this specific task. Use numbered steps.)\n"
+            f"- Time estimate (in hours or days)\n"
+            f"- Time saved with AI support (in hours and include estimated percentage. Example: '2 hours (~25%)')\n"
+            f"- Potential delay margin (%) (percentage that reflects estimated risk of delay due to unexpected issues or blockers)\n\n"
+
+            f"Return everything in a JSON format:\n"
+            f"{{ 'mensagem': <ordering_summary>, 'tasks': [ ...ordered_tasks... ] }}\n\n"
+
             f"Tasks:\n"
     )
     else:
         prompt = (
-            "You are a senior SCRUM MASTER, expert in agile task prioritization.\n"
-            "Analyze the tasks below and ORDER them according to your experience, considering what is most strategic for the team.\n"
-            "Create a preliminary and refined message to guide the user on what they need to know to make strategic decisions in JIRA. Follow this format:\n"
-            "1. An EXECUTIVE SUMMARY about the ordering logic and the strategic objective.\n"
-            "2. Highlighted blocks:\n"
-            "   - WHY THIS ORDER? (explain the rationale, give practical examples)\n"
-            "   - PRACTICAL IMPACT (what changes for the business and the user, from the perspective of how effective and strong this impact will be)\n"
-            "   - STRATEGIC RECOMMENDATIONS (with application examples and a brief explanation of the reasons for these recommendations)\n"
-            "   - RISKS OF NOT FOLLOWING THIS ORDER\n"
-            "   - NEXT STEPS CHECKLIST\n"
-            "Use clear, objective language, agile leadership tone, highlight in bullet points.\n"
+            "You are a highly experienced software engineering advisor with senior Scrum Master knowledge. "
+            "Your goal is to support Scrum Masters and tech leads in making strategic and tactical decisions in JIRA.\n\n"
 
-            # each task prompt:
-            "For each task, include:\n"
-            "- Description (summarize to the first 50 characters of the original description and add '...' at the end, even if the description is shorter)\n"
-            "- Useful libraries (if backend, suggest for Python, JavaScript, and Java; if frontend, suggest for JavaScript, React, and Vue)\n"
-            "- Risk factors (bring 2 possible risk factors that may occur)\n"
-            "- Recommended strategy (be more thorough here, you can explain logically how the strategy should be applied, so it is functional regardless of the task or programming language)\n"
-            "- Time estimate\n"
-            "Respond with a JSON: { 'mensagem': <mensagem_geral>, 'tasks': [ ...tasks_ordenadas... ] }\n\n"
+            "Analyze the tasks below and ORDER them according to what is most strategic for the team, based on your expertise.\n"
+            "Then, generate a strategic message summarizing the logic behind the ordering. Use the structure below:\n\n"
+
+            "1. EXECUTIVE SUMMARY (briefly explain the overall logic and strategic goal of the task ordering)\n"
+            "2. WHY THIS ORDER? (justify the prioritization with practical reasoning and examples)\n"
+            "3. PRACTICAL IMPACT (explain the expected impact for the business and user, clearly and realistically)\n"
+            "4. STRATEGIC RECOMMENDATIONS (give practical suggestions with short examples of how they should be applied)\n"
+            "5. RISKS OF NOT FOLLOWING THIS ORDER (technical and business risks)\n"
+            "6. NEXT STEPS CHECKLIST (a bullet list of 3–5 clear, actionable next steps)\n\n"
+
+            "Use objective language, direct but insightful, avoiding buzzwords. Write in clear bullet points when appropriate.\n\n"
+
+            "For each task, return the following:\n"
+            "- ID (as given)\n"
+            "- Title (as given)\n"
+            "- Description (summarize only the first 20 characters of the original description and add '...')\n"
+            "- Useful libraries & tools (for backend tasks, suggest Python, JavaScript, and Java tools; for frontend, suggest JavaScript, React, and Vue tools)\n"
+            "- Risk factors (provide two real technical or project risks specific to the task)\n"
+            "- Recommended strategy (respond with a **step-by-step implementation plan**, include best practices, name relevant tools or techniques, and **justify each step**. This is the most important section — be thorough. Think like a senior engineer mentoring someone on how to approach this specific task. Use numbered steps.)\n"
+            "- Time estimate (in hours or days)\n"
+            "- Time saved with AI support (in hours and include estimated percentage. Example: '2 hours (~25%)')\n"
+            "- Potential delay margin (%) (percentage that reflects estimated risk of delay due to unexpected issues or blockers)\n\n"
+
+            "Return everything in a JSON format:\n"
+            "{ 'mensagem': <ordering_summary>, 'tasks': [ ...ordered_tasks... ] }\n\n"
+
             "Tasks:\n"
-                    )
+        )
 
 
         # Add each issue to the prompt
