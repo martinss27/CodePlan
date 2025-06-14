@@ -9,8 +9,8 @@ from .views import (
 )
 
 urlpatterns = [
-    path('jira/login', JiraAuthInit.as_view(), name='jira_auth_init'), # starts the OAuth flow
-    path('jira/callback', JiraAuthCallback.as_view(), name='jira_auth_callback'), # handles the OAuth callback
+    path('jira/login', JiraAuthInit.as_view(), name='jira_auth_init'), # starts the OAuth flow -> redirects to Jira for authentication
+    path('jira/callback', JiraAuthCallback.as_view(), name='jira_auth_callback'), # handles the OAuth callback from Jira
     path('integration/status', IntegrationStatusView.as_view(), name='integration_status'), # checks if Jira is connected
     path('jira/userinfo', JiraUserInfo.as_view(), name='jira_user_info'), # retrieves user info from Jira
     path('jira/projects', JiraProjects.as_view(), name='jira_projects'), # retrieves all Jira projects for the user

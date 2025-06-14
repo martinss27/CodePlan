@@ -2,12 +2,11 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.http import JsonResponse
 
-from .serializers import RegisterSerializer, LoginSerializer
 
+from .serializers import RegisterSerializer, LoginSerializer
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
@@ -51,9 +50,16 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        try:
-            request.user.auth_token.delete()
-            message = 'Logged out successfully.'
-        except (AttributeError, Token.DoesNotExist):
-            message = 'No active session found.'
-        return Response({"detail": message}, status=status.HTTP_200_OK)
+        refresh_token = request.COOKIES.get('refresh_token')
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+            except Exception:
+                pass
+        response = JsonResponse({
+            "detail": "Logged out successfully.",
+            "redirect": "/login" #Redirect to login page after logout
+            }) 
+        response.delete_cookie('refresh_token')
+        response.delete_cookie('access_token')
+        return response
