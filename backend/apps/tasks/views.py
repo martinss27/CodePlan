@@ -1,20 +1,22 @@
 import os
-from dotenv import load_dotenv
-load_dotenv()
+
 import requests
 import re
 import json
+from dotenv import load_dotenv
 
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from django.contrib.auth.models import User
 
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
 from .models import JiraToken
 from .services import *
+
+load_dotenv()
 
 JIRA_CLIENT_ID = os.getenv("JIRA_CLIENT_ID")
 JIRA_CLIENT_SECRET = os.getenv("JIRA_CLIENT_SECRET")
@@ -45,9 +47,6 @@ class JiraAuthCallback(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        print("User authenticated:", request.user.is_authenticated)
-        print("User:", request.user)
-        print("GET params:", request.GET)
         code = request.GET.get("code")
         if not code:
             return Response({"error": "code not found."}, status=400)
@@ -86,7 +85,9 @@ class JiraUserInfo(APIView):
         return Response(resp.json())
     
 class JiraProjects(APIView):
-    @method_decorator(login_required)
+
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         projects, error = get_user_jira_projects(request.user)
         if error:
@@ -96,13 +97,31 @@ class JiraProjects(APIView):
 class JiraProjectIssues(APIView):
     @method_decorator(login_required)
     def get(self, request, project_key):
-        jira_token, cloud_id, error = get_jira_token_and_cloud_id(request.user)
+        jira_token, cloud_id, error = self._get_token_and_cloud_id(request.user)
         if error:
             return Response({"error": error}, status=404)
 
-        issues = get_project_issues(jira_token, cloud_id, project_key)
-        filtered_issues = filter_issues(issues)
+        filtered_issues = self._get_filtered_issues(jira_token, cloud_id, project_key)
+        order_label = self._get_order_label(request)
+        prompt = build_ai_prompt(filtered_issues, order_label)
+        ia_response = call_ai(prompt)
 
+        enriched_ia_summary, mensagem_ordenacao = self._process_ai_response(ia_response, filtered_issues)
+
+        return Response({
+            "issues": filtered_issues,
+            "ai_summary": enriched_ia_summary,
+            "mensagem_ordenacao": mensagem_ordenacao
+        })
+
+    def _get_token_and_cloud_id(self, user):
+        return get_jira_token_and_cloud_id(user)
+
+    def _get_filtered_issues(self, jira_token, cloud_id, project_key):
+        issues = get_project_issues(jira_token, cloud_id, project_key)
+        return filter_issues(issues)
+
+    def _get_order_label(self, request):
         order_by = request.GET.get("order_by", "").strip().lower()
         order_options = {
             "dificuldade": "dificuldade",
@@ -111,12 +130,9 @@ class JiraProjectIssues(APIView):
             "impacto": "impacto no projeto",
             "dependencias": "dependências"
         }
-        order_label = order_options.get(order_by)
+        return order_options.get(order_by)
 
-        prompt = build_ai_prompt(filtered_issues, order_label)
-        ia_response = call_ai(prompt)
-
-        # Lógica de tratamento da resposta da IA (igual ao seu código atual)
+    def _process_ai_response(self, ia_response, filtered_issues):
         if isinstance(ia_response, list) and len(ia_response) == len(filtered_issues):
             enriched_ia_summary = []
             for issue, ai_item in zip(filtered_issues, ia_response):
@@ -132,14 +148,8 @@ class JiraProjectIssues(APIView):
             enriched_ia_summary = ia_response["tasks"]
             mensagem_ordenacao = ia_response["mensagem"]
         elif isinstance(ia_response, list) and len(ia_response) == len(filtered_issues):
-            enriched_ia_summary = ia_response
             mensagem_ordenacao = None
         else:
-            enriched_ia_summary = ia_response
             mensagem_ordenacao = None
 
-        return Response({
-            "issues": filtered_issues,
-            "ai_summary": enriched_ia_summary,
-            "mensagem_ordenacao": mensagem_ordenacao
-        })
+        return enriched_ia_summary, mensagem_ordenacao

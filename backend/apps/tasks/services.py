@@ -89,65 +89,65 @@ def filter_issues(issues): #filter and format just the necessary fields
 
 def build_ai_prompt(filtered_issues, order_label):
     if order_label:
-            prompt = (
-        f"Você é uma SCRUM MASTER sênior, especialista em priorização de tarefas de desenvolvimento ágil.\n"
-        f"Analise as tasks abaixo e ORDENE pelo critério: '{order_label}'.\n"
-        f"Monte uma mensagem prévia e refinada para orientar o usuário sobre o que ele precisa saber para tomar decisões estratégicas no JIRA. Siga este formato:\n"
-        f"1. Um RESUMO EXECUTIVO sobre a lógica de ordenação e o objetivo estratégico.\n"
-        f"2. Blocos destacados:\n"
-        f"   -  POR QUE ESSA ORDEM? (explique o racional, cite exemplos práticos)\n"
-        f"   -  IMPACTO PRÁTICO (o que muda para o negócio e para o usuário, de uma perspectiva de o quanto esse impacto sera efetivo e forte)\n"
-        f"   -  RECOMENDAÇÕES ESTRATÉGICAS (com exemplos de aplicação, e explicação breve do motivo dessas recomendações)\n"
-        f"   -  RISCOS DE NÃO SEGUIR ESSA ORDEM\n"
-        f"   -  CHECKLIST DE PRÓXIMOS PASSOS\n"
-        f"Use linguagem clara, objetiva, tom de liderança ágil, destacar em bullet points.\n"
+        prompt = (
+            f"You are a senior SCRUM MASTER, expert in agile task prioritization.\n"
+            f"Analyze the tasks below and ORDER them by the criterion: '{order_label}'.\n"
+            f"Create a preliminary and refined message to guide the user on what they need to know to make strategic decisions in JIRA. Follow this format:\n"
+            f"1. An EXECUTIVE SUMMARY about the ordering logic and the strategic objective.\n"
+            f"2. Highlighted blocks:\n"
+            f"   - WHY THIS ORDER? (explain the rationale, give practical examples)\n"
+            f"   - PRACTICAL IMPACT (what changes for the business and the user, from the perspective of how effective and strong this impact will be)\n"
+            f"   - STRATEGIC RECOMMENDATIONS (with application examples and a brief explanation of the reasons for these recommendations)\n"
+            f"   - RISKS OF NOT FOLLOWING THIS ORDER\n"
+            f"   - NEXT STEPS CHECKLIST\n"
+            f"Use clear, objective language, agile leadership tone, highlight in bullet points.\n"
 
-        #each task prompt:
-        f"Para cada task, inclua:\n"
-        f"- Descrição (resuma para os 50 primeiros caracteres da descrição original e adicione '...' ao final, mesmo que a descrição seja menor)\n"
-        f"- Dicas de bibliotecas úteis (se for backend, sugira para Python, JavaScript e Java; se for frontend, sugira para JavaScript, React e Vue)\n"
-        f"- Fatores de risco(traga 2 possiveis fatores de risco que podem acontecer)\n"
-        f"- Estratégia recomendada(seja mais profundo aqui, pode dizer de uma forma mais lógica, como a estratégia deve ser aplicada, para que seja algo funcional independentemente da task ou independentemente da linguagem)\n"
-        f"- Estimativa de tempo\n"
-        f"Responda com um JSON: {{ 'mensagem': <mensagem_geral>, 'tasks': [ ...tasks_ordenadas... ] }}\n\n"
-        f"Tasks:\n"
-            )
+            # each task prompt:
+            f"For each task, include:\n"
+            f"- Description (summarize to the first 50 characters of the original description and add '...' at the end, even if the description is shorter)\n"
+            f"- Useful libraries (if backend, suggest for Python, JavaScript, and Java; if frontend, suggest for JavaScript, React, and Vue)\n"
+            f"- Risk factors (bring 2 possible risk factors that may occur)\n"
+            f"- Recommended strategy (be more thorough here, you can explain logically how the strategy should be applied, so it is functional regardless of the task or programming language)\n"
+            f"- Time estimate\n"
+            f"Respond with a JSON: {{ 'mensagem': <mensagem_geral>, 'tasks': [ ...tasks_ordenadas... ] }}\n\n"
+            f"Tasks:\n"
+    )
     else:
-            prompt = (
-        "Você é uma SCRUM MASTER sênior, especialista em priorização de tarefas de desenvolvimento ágil.\n"
-        "Analise as tasks abaixo e ORDENE conforme sua experiência, considerando o que for mais estratégico para o time.\n"
-        "Monte uma mensagem prévia e refinada para orientar o usuário sobre o que ele precisa saber para tomar decisões estratégicas no JIRA. Siga este formato:\n"
-        "1. Um RESUMO EXECUTIVO sobre a lógica de ordenação e o objetivo estratégico.\n"
-        "2. Blocos destacados:\n"
-        "   -  POR QUE ESSA ORDEM? (explique o racional, cite exemplos práticos)\n"
-        "   -  IMPACTO PRÁTICO (o que muda para o negócio e para o usuário, de uma perspectiva de o quanto esse impacto sera efetivo e forte)\n"
-        "   -  RECOMENDAÇÕES ESTRATÉGICAS (com exemplos de aplicação, e explicação breve do motivo dessas recomendações)\n"
-        "   -  RISCOS DE NÃO SEGUIR ESSA ORDEM\n"
-        "   -  CHECKLIST DE PRÓXIMOS PASSOS\n"
-        "Use linguagem clara, objetiva, tom de liderança ágil, destacar em bullet points.\n"
-        
-        # each task prompt:
-        "Para cada task, inclua:\n"
-        "- Descrição (resuma para os 50 primeiros caracteres da descrição original e adicione '...' ao final, mesmo que a descrição seja menor)\n"
-        "- Dicas de bibliotecas úteis (se for backend, sugira para Python, JavaScript e Java; se for frontend, sugira para JavaScript, React e Vue)\n"
-        "- Fatores de risco(traga 2 possiveis fatores de risco que podem acontecer)\n"
-        "- Estratégia recomendada(seja mais profundo aqui, pode dizer de uma forma mais lógica, como a estratégia deve ser aplicada, para que seja algo funcional independentemente da task ou independentemente da linguagem)\n"
-        "- Estimativa de tempo\n"
-        "Responda com um JSON: { 'mensagem': <mensagem_geral>, 'tasks': [ ...tasks_ordenadas... ] }\n\n"
-        "Tasks:\n"
-            )
+        prompt = (
+            "You are a senior SCRUM MASTER, expert in agile task prioritization.\n"
+            "Analyze the tasks below and ORDER them according to your experience, considering what is most strategic for the team.\n"
+            "Create a preliminary and refined message to guide the user on what they need to know to make strategic decisions in JIRA. Follow this format:\n"
+            "1. An EXECUTIVE SUMMARY about the ordering logic and the strategic objective.\n"
+            "2. Highlighted blocks:\n"
+            "   - WHY THIS ORDER? (explain the rationale, give practical examples)\n"
+            "   - PRACTICAL IMPACT (what changes for the business and the user, from the perspective of how effective and strong this impact will be)\n"
+            "   - STRATEGIC RECOMMENDATIONS (with application examples and a brief explanation of the reasons for these recommendations)\n"
+            "   - RISKS OF NOT FOLLOWING THIS ORDER\n"
+            "   - NEXT STEPS CHECKLIST\n"
+            "Use clear, objective language, agile leadership tone, highlight in bullet points.\n"
+
+            # each task prompt:
+            "For each task, include:\n"
+            "- Description (summarize to the first 50 characters of the original description and add '...' at the end, even if the description is shorter)\n"
+            "- Useful libraries (if backend, suggest for Python, JavaScript, and Java; if frontend, suggest for JavaScript, React, and Vue)\n"
+            "- Risk factors (bring 2 possible risk factors that may occur)\n"
+            "- Recommended strategy (be more thorough here, you can explain logically how the strategy should be applied, so it is functional regardless of the task or programming language)\n"
+            "- Time estimate\n"
+            "Respond with a JSON: { 'mensagem': <mensagem_geral>, 'tasks': [ ...tasks_ordenadas... ] }\n\n"
+            "Tasks:\n"
+                    )
 
 
         # Add each issue to the prompt
     for issue in filtered_issues:
             prompt += (
                 f"- ID: {issue['id']}\n"
-                f"- Título: {issue['summary']}\n"
-                f"Descrição: {extract_description(issue['description'])}\n"
+                f"- Title: {issue['summary']}\n"
+                f"Description: {extract_description(issue['description'])}\n"
                 f"Status: {issue['status']}\n"
-                f"Tipo: {issue['issuetype']}\n"
-                f"Prioridade: {issue['priority']}\n"
-                f"Responsável: {issue['assignee']}\n\n"
+                f"Type: {issue['issuetype']}\n"
+                f"Priority: {issue['priority']}\n"
+                f"Assignee: {issue['assignee']}\n\n"
             )
     return prompt
 
