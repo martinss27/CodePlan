@@ -30,7 +30,6 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
 
     # Custom apps
-    'apps.core',
     'apps.users',
     'apps.tasks',
 ]

@@ -84,6 +84,19 @@ class JiraUserInfo(APIView):
         resp = requests.get(JIRA_API_URL, headers=headers)
         return Response(resp.json())
     
+class IntegrationStatusView(APIView): #     GET /integrations/status
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            JiraToken.objects.get(user=request.user)
+            jira_connected = True
+        except JiraToken.DoesNotExist:
+            jira_connected = False
+        return Response({
+            "jira_connected": jira_connected,
+        })
+    
 class JiraProjects(APIView):
 
     permission_classes = [IsAuthenticated]
