@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tasks', '0003_jiratoken_delete_task'),
+        ('jira', '0003_jiratoken_delete_task'),
     ]
 
     operations = [

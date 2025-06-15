@@ -31,7 +31,7 @@ INSTALLED_APPS = [
 
     # Custom apps
     'apps.users',
-    'apps.tasks',
+    'apps.jira',
 ]
 
 MIDDLEWARE = [

@@ -21,7 +21,7 @@ load_dotenv()
 JIRA_CLIENT_ID = os.getenv("JIRA_CLIENT_ID")
 JIRA_CLIENT_SECRET = os.getenv("JIRA_CLIENT_SECRET")
 
-JIRA_REDIRECT_URI = "http://127.0.0.1:8000/oauth/callback"
+JIRA_REDIRECT_URI = "http://127.0.0.1:8000/jira/callback"
 JIRA_AUTH_URL = "https://auth.atlassian.com/authorize"
 JIRA_TOKEN_URL = "https://auth.atlassian.com/oauth/token"
 
@@ -71,7 +71,7 @@ class JiraAuthCallback(APIView):
                 "expires_in": token_data.get("expires_in", 0),
             }
         )
-        return redirect("http://127.0.0.1:8000/oauth/projects")
+        return redirect("http://127.0.0.1:8000/jira/projects")
 
 class JiraUserInfo(APIView):
     @method_decorator(login_required)
