@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import timedelta
+import os
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -62,11 +63,11 @@ WSGI_APPLICATION = 'api.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'codeplanDB',
-        'USER': 'postgres',                
-        'PASSWORD': '123',               
-        'HOST': 'localhost',               
-        'PORT': '5432',                    
+        'NAME': os.environ.get('DJANGO_DB_NAME', 'codeplanDB'),
+        'USER': os.environ.get('DJANGO_DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD', '123'),
+        'HOST': os.environ.get('DJANGO_DB_HOST', 'db'), 
+        'PORT': '5432',
     }
 }
 
