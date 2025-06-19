@@ -66,7 +66,7 @@ DATABASES = {
         'NAME': os.environ.get('DJANGO_DB_NAME', 'codeplanDB'),
         'USER': os.environ.get('DJANGO_DB_USER', 'postgres'),
         'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD', '123'),
-        'HOST': os.environ.get('DJANGO_DB_HOST', 'db'), 
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }

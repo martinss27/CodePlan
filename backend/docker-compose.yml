@@ -21,6 +21,7 @@ services:
       - db
     environment:
       - DEBUG=1
+      - DB_HOST=db
       - DJANGO_DB_HOST=db
       - DJANGO_DB_NAME=codeplanDB
       - DJANGO_DB_USER=postgres

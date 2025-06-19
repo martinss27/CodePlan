@@ -105,7 +105,12 @@ class JiraProjects(APIView):
         projects, error = get_user_jira_projects(request.user)
         if error:
             return Response({"error": error}, status=404)
+        for project in projects:
+            project_key = project.get("key")
+            if project_key:
+                project["issues_url"] = f"/jira/projects/{project_key}/issues/"
         return Response(projects)
+
     
 class JiraProjectIssues(APIView):
     @method_decorator(login_required)
