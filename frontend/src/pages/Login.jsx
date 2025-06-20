@@ -8,7 +8,7 @@ function Login() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-
+  console.log(email, password);
   const validateForm = () => {
     if (!email || !password) {
       setError('Please fill in all fields');
