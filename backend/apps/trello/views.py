@@ -51,5 +51,37 @@ class TrelloCallbackView(APIView):
             resource_owner_key=access_token,
             resource_owner_secret=access_token_secret,
         )
-        response = authed.get('https://api.trello.com/1/members/me/boards')
-        return Response(response.json())
+        
+        boards_response = authed.get('https://api.trello.com/1/members/me/boards')
+        boards = boards_response.json()
+        result = []
+        for board in boards:
+            board_id = board.get('id')
+            board_name = board.get('name')
+            board_url = board.get('url')
+            # boards lists
+            lists_response = authed.get(f'https://api.trello.com/1/boards/{board_id}/lists')
+            lists = lists_response.json()
+            list_id_to_name = {lst['id']: lst['name'] for lst in lists}
+            # cards
+            cards_response = authed.get(f'https://api.trello.com/1/boards/{board_id}/cards')
+            cards = cards_response.json()
+            cards_info = [
+                {
+                    "id": card.get("id"),
+                    "name": card.get("name"),
+                    "url": card.get("url"),
+                    "desc": card.get("desc"),
+                    "board_name": board_name,
+                    "list_id": card.get("idList"),
+                    "list_name": list_id_to_name.get(card.get("idList"))
+                }
+                for card in cards
+            ]
+            result.append({
+                "id": board_id,
+                "name": board_name,
+                "url": board_url,
+                "cards": cards_info
+            })
+        return Response(result)
