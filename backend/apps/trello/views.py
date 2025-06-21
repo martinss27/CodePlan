@@ -45,6 +45,22 @@ class TrelloCallbackView(APIView):
         oauth_tokens = oauth.fetch_access_token(ACCESS_TOKEN_URL)
         access_token = oauth_tokens['oauth_token']
         access_token_secret = oauth_tokens['oauth_token_secret']
+
+        request.session['access_token'] = access_token
+        request.session['access_token_secret'] = access_token_secret
+
+        request.session.pop('resource_owner_key', None)
+        request.session.pop('resource_owner_secret', None)
+        return Response({"message": "Authentication successful, you can now access /trello/allboards."})
+    
+class TrelloAllBoardsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        access_token = request.session.get('access_token')
+        access_token_secret = request.session.get('access_token_secret')
+        if not (access_token and access_token_secret):
+            return Response({"error": "Tokens de acesso não encontrados. Faça login novamente."}, status=401)
         authed = OAuth1Session(
             API_KEY,
             client_secret=API_SECRET,
