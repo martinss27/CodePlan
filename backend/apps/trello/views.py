@@ -51,7 +51,7 @@ class TrelloCallbackView(APIView):
 
         request.session.pop('resource_owner_key', None)
         request.session.pop('resource_owner_secret', None)
-        return Response({"message": "Authentication successful, you can now access /trello/allboards."})
+        return redirect("http://127.0.0.1:8000/trello/allboards/")
     
 class TrelloAllBoardsView(APIView):
     permission_classes = [IsAuthenticated]
