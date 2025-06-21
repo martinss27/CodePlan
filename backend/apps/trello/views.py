@@ -60,44 +60,70 @@ class TrelloAllBoardsView(APIView):
         access_token = request.session.get('access_token')
         access_token_secret = request.session.get('access_token_secret')
         if not (access_token and access_token_secret):
-            return Response({"error": "Tokens de acesso não encontrados. Faça login novamente."}, status=401)
+            return Response({"error": "tokens not found, try again"}, status=401)
         authed = OAuth1Session(
             API_KEY,
             client_secret=API_SECRET,
             resource_owner_key=access_token,
             resource_owner_secret=access_token_secret,
         )
-        
         boards_response = authed.get('https://api.trello.com/1/members/me/boards')
         boards = boards_response.json()
-        result = []
-        for board in boards:
-            board_id = board.get('id')
-            board_name = board.get('name')
-            board_url = board.get('url')
-            # boards lists
-            lists_response = authed.get(f'https://api.trello.com/1/boards/{board_id}/lists')
-            lists = lists_response.json()
-            list_id_to_name = {lst['id']: lst['name'] for lst in lists}
-            # cards
-            cards_response = authed.get(f'https://api.trello.com/1/boards/{board_id}/cards')
-            cards = cards_response.json()
-            cards_info = [
-                {
-                    "id": card.get("id"),
+        result = [
+            {
+                "id": board.get("id"),
+                "name": board.get("name"),
+                "url": board.get("url")
+            }
+            for board in boards
+        ]
+        return Response(result)
+    
+
+class TrelloBoardDetailsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, board_id):
+        access_token = request.session.get('access_token')
+        access_token_secret = request.session.get('access_token_secret')
+        if not (access_token and access_token_secret):
+            return Response({"error": "tokens not found, try again"}, status=401)
+        authed = OAuth1Session(
+            API_KEY,
+            client_secret=API_SECRET,
+            resource_owner_key=access_token,
+            resource_owner_secret=access_token_secret,
+        )
+        board_response = authed.get(f'https://api.trello.com/1/boards/{board_id}')
+        if board_response.status_code != 200:
+            return Response({"error": "Failed to fetch board info", "details": board_response.text}, status=board_response.status_code)
+        board_data = board_response.json()
+        board_name = board_data.get("name", "")
+        # Get lists
+        lists_response = authed.get(f'https://api.trello.com/1/boards/{board_id}/lists')
+        if lists_response.status_code != 200:
+            return Response({"error": "Failed to fetch lists", "details": lists_response.text}, status=lists_response.status_code)
+        lists = lists_response.json()
+        # Get cards
+        cards_response = authed.get(f'https://api.trello.com/1/boards/{board_id}/cards')
+        if cards_response.status_code != 200:
+            return Response({"error": "Failed to fetch cards", "details": cards_response.text}, status=cards_response.status_code)
+        cards = cards_response.json()
+        # Organize cards by list
+        list_id_to_cards = {lst['id']: [] for lst in lists}
+        for card in cards:
+            list_id = card.get('idList')
+            if list_id in list_id_to_cards:
+                list_id_to_cards[list_id].append({
                     "name": card.get("name"),
-                    "url": card.get("url"),
                     "desc": card.get("desc"),
                     "board_name": board_name,
-                    "list_id": card.get("idList"),
-                    "list_name": list_id_to_name.get(card.get("idList"))
-                }
-                for card in cards
-            ]
+                })
+        result = []
+        for lst in lists:
             result.append({
-                "id": board_id,
-                "name": board_name,
-                "url": board_url,
-                "cards": cards_info
+                "id": lst.get("id"),
+                "name": lst.get("name"),
+                "cards": list_id_to_cards[lst['id']]
             })
         return Response(result)
