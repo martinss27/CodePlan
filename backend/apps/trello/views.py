@@ -178,12 +178,35 @@ class TrelloBoardAIAssistantView(APIView):
             })
         # Monta o prompt para a IA
         prompt = (
-            "Você é um assistente sênior de engenharia de software. "
-            "Analise as tarefas abaixo, organize-as de forma estratégica e explique sua lógica. "
-            "Para cada tarefa, retorne: nome, descrição resumida (20 caracteres + ...), riscos, estratégia recomendada, estimativa de tempo e impacto.\n\n"
-            "Formato de resposta: JSON com {'mensagem': <resumo>, 'tasks': [ ... ]}\n\n"
-            "Tarefas:\n"
-        )
+    "Você é um assistente de engenharia de software especializado em metodologias ágeis, especialmente Scrum. "
+    "Seu papel é analisar, reordenar e sugerir melhorias na organização das tarefas abaixo, extraídas de um board do Trello. "
+    "As tarefas podem estar em listas como Backlog, Sprint Atual, Revisão, entre outras.\n\n"
+
+    "Instruções:\n"
+    "- Reordene as tarefas dentro de cada lista com base em urgência, valor para o negócio, bloqueios e boas práticas ágeis.\n"
+    "- Caso necessário, sugira mover uma tarefa para outra lista (com justificativa técnica ou de fluxo ágil).\n"
+    "- Não crie novas listas.\n\n"
+
+    "Para cada tarefa, retorne:\n"
+    "- 'nome': título do card\n"
+    "- 'resumo': uma versão reduzida da descrição (máx. 20 caracteres + ...)\n"
+    "- 'riscos': riscos associados à tarefa\n"
+    "- 'estrategia': estratégia técnica ou de processo recomendada\n"
+    "- 'estimativa_horas': tempo estimado para conclusão\n"
+    "- 'impacto': impacto esperado no produto ou sprint\n\n"
+
+    "Formato da resposta: JSON com esta estrutura:\n"
+    "{\n"
+    "  'mensagem': <resumo geral da organização e principais decisões>,\n"
+    "  'tasks_por_lista': {\n"
+    "    'nome_da_lista_1': [ ... ],\n"
+    "    'nome_da_lista_2': [ ... ]\n"
+    "  }\n"
+    "}\n\n"
+
+    "Tarefas:\n"
+    )
+
         for lista in trello_data:
             for card in lista.get("cards", []):
                 prompt += (
