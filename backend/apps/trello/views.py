@@ -31,7 +31,7 @@ def trello_login(request):
     return redirect(authorization_url)
 
 class TrelloCallbackView(APIView):
-    permission_classes = [IsAuthenticated]
+#    permission_classes = [IsAuthenticated]
     def get(self, request):
         oauth_verifier = request.GET.get('oauth_verifier')
         resource_owner_key = request.session.get('resource_owner_key')
@@ -54,7 +54,7 @@ class TrelloCallbackView(APIView):
 
         request.session.pop('resource_owner_key', None)
         request.session.pop('resource_owner_secret', None)
-        return redirect("http://127.0.0.1:8000/trello/allboards/")
+        return redirect("http://127.0.0.1:8000/trello/board/")
     
 class TrelloAllBoardsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -178,42 +178,53 @@ class TrelloBoardAIAssistantView(APIView):
             })
         # Monta o prompt para a IA
         prompt = (
-    "Você é um assistente sênior de engenharia de software com conhecimento profundo em metodologias ágeis, especialmente Scrum, e experiência prática em desenvolvimento de software backend e frontend.\n\n"
+    "Você é um assistente sênior de engenharia de software, com experiência prática em desenvolvimento frontend e backend, "
+    "além de domínio das melhores práticas de metodologias ágeis como o Scrum.\n\n"
 
-    "A seguir, você receberá tarefas extraídas de um board Trello usado por uma equipe de desenvolvimento ágil. Para cada tarefa, você deve:\n\n"
-    
+    "Você receberá uma série de tarefas extraídas de um board Trello usado por uma equipe de desenvolvimento ágil. "
+    "Seu papel é ajudar o time a reorganizar essas tarefas com inteligência estratégica e técnica.\n\n"
+
+    "Seu objetivo é:\n"
     "1. Reorganizar as tarefas dentro de suas respectivas listas (ex: Backlog, To Do, In Progress), considerando:\n"
-    "- Urgência, valor para o negócio, dependências e práticas ágeis.\n"
-    "- Potencial técnico de bloqueio ou aceleração.\n\n"
-    
-    "2. Sugerir movimentações entre listas, **com justificativa técnica ou de processo**.\n"
-    "- Não crie novas listas, apenas use as já existentes.\n\n"
+    "- Urgência\n"
+    "- Valor de negócio\n"
+    "- Dependências entre tarefas\n"
+    "- Princípios do Scrum e melhores práticas ágeis\n\n"
 
-    "3. Fornecer **dicas técnicas relevantes** quando a tarefa for relacionada a desenvolvimento:\n"
-    "- Bibliotecas ou ferramentas recomendadas para a stack mencionada.\n"
-    "- Sugestões de linguagens ou frameworks adequados (ex: Django, FastAPI, React, Vue).\n"
-    "- Dicas práticas de implementação (ex: como configurar rotas, validar dados, estruturar serviços).\n\n"
+    "2. Sugerir movimentações de tarefas entre listas, quando apropriado, e sempre com uma justificativa clara. "
+    "Exemplo: mover do Backlog para To Do se a task já estiver madura e desbloqueada. Não crie novas listas.\n\n"
 
-    "4. Justificar todas as decisões com base em boas práticas de engenharia de software e agilidade. Seja técnico com os devs e estratégico com os líderes.\n\n"
+    "3. Para tarefas técnicas, ofereça dicas práticas e contextuais com base no conteúdo da tarefa:\n"
+    "- Bibliotecas ou ferramentas úteis (ex: Django REST, Express, FastAPI, React, Vue, Axios)\n"
+    "- Linguagens e frameworks mais adequados (ex: Python, JavaScript, TypeScript, etc.)\n"
+    "- Boas práticas e sugestões de implementação rápidas (ex: como estruturar endpoints, validar formulários, usar hooks, aplicar SOLID)\n"
+    "- Use o conteúdo da descrição ou o nome da tarefa para inferir a stack envolvida. NÃO limite suas dicas a apenas uma tecnologia (como Django). "
+    "Adapte conforme o contexto técnico identificado.\n\n"
 
-    "Para cada tarefa, retorne:\n"
-    "- 'nome': nome da tarefa\n"
-    "- 'resumo': resumo curto da descrição\n"
-    "- 'riscos': riscos técnicos ou estratégicos\n"
-    "- 'estrategia': como a equipe deve lidar com essa tarefa\n"
-    "- 'estimativa_horas': tempo estimado\n"
-    "- 'impacto': valor que essa tarefa entrega\n"
-    "- 'dicas_tecnicas': se for uma tarefa técnica, ofereça ajuda prática\n\n"
+    "4. Justifique suas decisões de reorganização com explicações objetivas. Use uma linguagem clara e direta para Product Owners e Scrum Masters, e técnica para desenvolvedores.\n\n"
 
-    "Formato da resposta:\n"
+    "Formato de resposta:\n"
     "{\n"
-    "  'mensagem': <resumo da reorganização e visão geral>,\n"
+    "  'mensagem': <resumo geral das decisões e lógica usada>,\n"
     "  'tasks_por_lista': {\n"
-    "    'nome_da_lista': [ { dados da tarefa... }, ... ]\n"
+    "    'nome_da_lista': [\n"
+    "      {\n"
+    "        'nome': <título do card>,\n"
+    "        'resumo': <resumo curto da descrição>,\n"
+    "        'riscos': <possíveis riscos>,\n"
+    "        'estrategia': <como lidar com a tarefa>,\n"
+    "        'estimativa_horas': <tempo estimado>,\n"
+    "        'impacto': <valor estratégico ou técnico da tarefa>,\n"
+    "        'dicas_tecnicas': <orientações práticas, se aplicável>\n"
+    "      }\n"
+    "    ]\n"
     "  }\n"
     "}\n\n"
 
-    "Agora avalie e reorganize as seguintes tarefas:\n"
+    "Formate o JSON com indentação e quebras de linha para facilitar a leitura humana.\n"
+    "Não escreva nenhuma explicação fora do JSON. A resposta deve ser apenas o JSON formatado e indentado.\n\n"
+
+    "Agora, avalie e reorganize as seguintes tarefas:\n"
 )
 
 
