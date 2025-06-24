@@ -178,34 +178,44 @@ class TrelloBoardAIAssistantView(APIView):
             })
         # Monta o prompt para a IA
         prompt = (
-    "Você é um assistente de engenharia de software especializado em metodologias ágeis, especialmente Scrum. "
-    "Seu papel é analisar, reordenar e sugerir melhorias na organização das tarefas abaixo, extraídas de um board do Trello. "
-    "As tarefas podem estar em listas como Backlog, Sprint Atual, Revisão, entre outras.\n\n"
+    "Você é um assistente sênior de engenharia de software com conhecimento profundo em metodologias ágeis, especialmente Scrum, e experiência prática em desenvolvimento de software backend e frontend.\n\n"
 
-    "Instruções:\n"
-    "- Reordene as tarefas dentro de cada lista com base em urgência, valor para o negócio, bloqueios e boas práticas ágeis.\n"
-    "- Caso necessário, sugira mover uma tarefa para outra lista (com justificativa técnica ou de fluxo ágil).\n"
-    "- Não crie novas listas.\n\n"
+    "A seguir, você receberá tarefas extraídas de um board Trello usado por uma equipe de desenvolvimento ágil. Para cada tarefa, você deve:\n\n"
+    
+    "1. Reorganizar as tarefas dentro de suas respectivas listas (ex: Backlog, To Do, In Progress), considerando:\n"
+    "- Urgência, valor para o negócio, dependências e práticas ágeis.\n"
+    "- Potencial técnico de bloqueio ou aceleração.\n\n"
+    
+    "2. Sugerir movimentações entre listas, **com justificativa técnica ou de processo**.\n"
+    "- Não crie novas listas, apenas use as já existentes.\n\n"
+
+    "3. Fornecer **dicas técnicas relevantes** quando a tarefa for relacionada a desenvolvimento:\n"
+    "- Bibliotecas ou ferramentas recomendadas para a stack mencionada.\n"
+    "- Sugestões de linguagens ou frameworks adequados (ex: Django, FastAPI, React, Vue).\n"
+    "- Dicas práticas de implementação (ex: como configurar rotas, validar dados, estruturar serviços).\n\n"
+
+    "4. Justificar todas as decisões com base em boas práticas de engenharia de software e agilidade. Seja técnico com os devs e estratégico com os líderes.\n\n"
 
     "Para cada tarefa, retorne:\n"
-    "- 'nome': título do card\n"
-    "- 'resumo': uma versão reduzida da descrição (máx. 20 caracteres + ...)\n"
-    "- 'riscos': riscos associados à tarefa\n"
-    "- 'estrategia': estratégia técnica ou de processo recomendada\n"
-    "- 'estimativa_horas': tempo estimado para conclusão\n"
-    "- 'impacto': impacto esperado no produto ou sprint\n\n"
+    "- 'nome': nome da tarefa\n"
+    "- 'resumo': resumo curto da descrição\n"
+    "- 'riscos': riscos técnicos ou estratégicos\n"
+    "- 'estrategia': como a equipe deve lidar com essa tarefa\n"
+    "- 'estimativa_horas': tempo estimado\n"
+    "- 'impacto': valor que essa tarefa entrega\n"
+    "- 'dicas_tecnicas': se for uma tarefa técnica, ofereça ajuda prática\n\n"
 
-    "Formato da resposta: JSON com esta estrutura:\n"
+    "Formato da resposta:\n"
     "{\n"
-    "  'mensagem': <resumo geral da organização e principais decisões>,\n"
+    "  'mensagem': <resumo da reorganização e visão geral>,\n"
     "  'tasks_por_lista': {\n"
-    "    'nome_da_lista_1': [ ... ],\n"
-    "    'nome_da_lista_2': [ ... ]\n"
+    "    'nome_da_lista': [ { dados da tarefa... }, ... ]\n"
     "  }\n"
     "}\n\n"
 
-    "Tarefas:\n"
-    )
+    "Agora avalie e reorganize as seguintes tarefas:\n"
+)
+
 
         for lista in trello_data:
             for card in lista.get("cards", []):
