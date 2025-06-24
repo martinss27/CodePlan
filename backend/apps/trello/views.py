@@ -1,7 +1,10 @@
 import os
+
+from apps.jira.services import call_ai
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+
 from django.shortcuts import redirect
 from requests_oauthlib import OAuth1Session
 from dotenv import load_dotenv
@@ -127,3 +130,67 @@ class TrelloBoardDetailsView(APIView):
                 "cards": list_id_to_cards[lst['id']]
             })
         return Response(result)
+    
+class TrelloBoardAIAssistantView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, board_id):
+        access_token = request.session.get('access_token')
+        access_token_secret = request.session.get('access_token_secret')
+        if not (access_token and access_token_secret):
+            return Response({"error": "tokens not found"}, status=401)
+        authed = OAuth1Session(
+            API_KEY,
+            client_secret=API_SECRET,
+            resource_owner_key=access_token,
+            resource_owner_secret=access_token_secret,
+        )
+
+        board_response = authed.get(f'https://api.trello.com/1/boards/{board_id}')
+        if board_response.status_code != 200:
+            return Response({"error": "Failed to fetch board info", "details": board_response.text}, status=board_response.status_code)
+        board_data = board_response.json()
+        board_name = board_data.get("name", "")
+        lists_response = authed.get(f'https://api.trello.com/1/boards/{board_id}/lists')
+        if lists_response.status_code != 200:
+            return Response({"error": "Failed to fetch lists", "details": lists_response.text}, status=lists_response.status_code)
+        lists = lists_response.json()
+        cards_response = authed.get(f'https://api.trello.com/1/boards/{board_id}/cards')
+        if cards_response.status_code != 200:
+            return Response({"error": "Failed to fetch cards", "details": cards_response.text}, status=cards_response.status_code)
+        cards = cards_response.json()
+        # Organiza cards por lista
+        list_id_to_cards = {lst['id']: [] for lst in lists}
+        for card in cards:
+            list_id = card.get('idList')
+            if list_id in list_id_to_cards:
+                list_id_to_cards[list_id].append({
+                    "name": card.get("name"),
+                    "desc": card.get("desc"),
+                    "board_name": board_name,
+                })
+        trello_data = []
+        for lst in lists:
+            trello_data.append({
+                "id": lst.get("id"),
+                "name": lst.get("name"),
+                "cards": list_id_to_cards[lst['id']]
+            })
+        # Monta o prompt para a IA
+        prompt = (
+            "Você é um assistente sênior de engenharia de software. "
+            "Analise as tarefas abaixo, organize-as de forma estratégica e explique sua lógica. "
+            "Para cada tarefa, retorne: nome, descrição resumida (20 caracteres + ...), riscos, estratégia recomendada, estimativa de tempo e impacto.\n\n"
+            "Formato de resposta: JSON com {'mensagem': <resumo>, 'tasks': [ ... ]}\n\n"
+            "Tarefas:\n"
+        )
+        for lista in trello_data:
+            for card in lista.get("cards", []):
+                prompt += (
+                    f"- Nome: {card['name']}\n"
+                    f"Descrição: {card['desc']}\n"
+                    f"Lista: {lista['name']}\n"
+                    f"Quadro: {card['board_name']}\n\n"
+                )
+        ia_response = call_ai(prompt)
+        return Response({"ia_response":ia_response})
