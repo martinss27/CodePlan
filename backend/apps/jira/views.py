@@ -120,6 +120,23 @@ class JiraProjectIssues(APIView):
             return Response({"error": error}, status=404)
 
         filtered_issues = self._get_filtered_issues(jira_token, cloud_id, project_key)
+        return Response({"issues": filtered_issues})
+
+    def _get_token_and_cloud_id(self, user):
+        return get_jira_token_and_cloud_id(user)
+
+    def _get_filtered_issues(self, jira_token, cloud_id, project_key):
+        issues = get_project_issues(jira_token, cloud_id, project_key)
+        return filter_issues(issues)
+    
+class JiraProjectIssuesAI(APIView):
+    @method_decorator(login_required)
+    def get(self, request, project_key):
+        jira_token, cloud_id, error = self._get_token_and_cloud_id(request.user)
+        if error:
+            return Response({"error": error}, status=404)
+
+        filtered_issues = self._get_filtered_issues(jira_token, cloud_id, project_key)
         order_label = self._get_order_label(request)
         prompt = build_ai_prompt(filtered_issues, order_label)
         ia_response = call_ai(prompt)
@@ -127,7 +144,6 @@ class JiraProjectIssues(APIView):
         enriched_ia_summary, ordering_summary = self._process_ai_response(ia_response, filtered_issues)
 
         return Response({
-            "issues": filtered_issues,
             "ai_summary": enriched_ia_summary,
             "ordering_summary": ordering_summary
         })
