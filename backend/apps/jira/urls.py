@@ -6,6 +6,7 @@ from .views import (
     JiraProjects,
     JiraProjectIssues,
     IntegrationStatusView,
+    JiraProjectIssuesAI,
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path('jira/userinfo', JiraUserInfo.as_view(), name='jira_user_info'), # retrieves user info from Jira
     path('jira/projects', JiraProjects.as_view(), name='jira_projects'), # retrieves all Jira projects for the user
     path('jira/projects/<str:project_key>/issues/', JiraProjectIssues.as_view(), name='jira_project_issues'), # retrieves issues for a specific project with AI summary and ordering
+    path('jira/projects/<str:project_key>/issues/ai', JiraProjectIssuesAI.as_view(), name='jira_project_issues_ai'),
 ]
