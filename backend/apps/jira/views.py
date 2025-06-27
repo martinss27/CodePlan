@@ -109,6 +109,7 @@ class JiraProjects(APIView):
             project_key = project.get("key")
             if project_key:
                 project["issues_url"] = f"/jira/projects/{project_key}/issues/"
+                project["issues_ai_url"] = f"/jira/projects/{project_key}/issues/ai"
         return Response(projects)
 
     

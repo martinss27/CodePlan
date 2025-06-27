@@ -190,7 +190,7 @@ class TrelloBoardAIAssistantView(APIView):
         order_by = request.GET.get("order_by", "")
         order_label = get_order_label(order_by)
         
-        # Monta o prompt para a IA
+        # Monta o prompt para a 
         if order_label:
             prompt = (
             "Você é um assistente sênior de engenharia de software, com experiência prática em desenvolvimento frontend e backend, "
