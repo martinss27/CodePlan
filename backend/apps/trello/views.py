@@ -176,6 +176,19 @@ class TrelloBoardAIAssistantView(APIView):
                 "name": lst.get("name"),
                 "cards": list_id_to_cards[lst['id']]
             })
+
+        def get_order_label(user_input):
+            valid_labels = {
+                "urgencia": "urgencia da tarefa",
+                "impacto": "impacto no negócio",
+                "facilidade": "facilidade de implementação",
+                "complexidade": "complexidade técnica",
+                "dependencias": "dependências técnicas",
+            }
+            return valid_labels.get(user_input.lower()) if user_input else None
+        
+        order_by = request.GET.get("order_by", "")
+        order_label = get_order_label(order_by)
         # Monta o prompt para a IA
         prompt = (
     "Você é um assistente sênior de engenharia de software, com experiência prática em desenvolvimento frontend e backend, "
