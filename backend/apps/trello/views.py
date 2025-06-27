@@ -76,7 +76,9 @@ class TrelloAllBoardsView(APIView):
             {
                 "id": board.get("id"),
                 "name": board.get("name"),
-                "url": board.get("url")
+                "url": board.get("url"),
+                "details_url": f"/trello/board/{board.get('id')}/details/",
+                "ai_response_url": f"trello/board/{board.get('id')}/ai",
             }
             for board in boards
         ]
